@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Tiki Overlay Controller — URL Builder</title>
+  <style>
+    :root {
+      --navy: #0C2340;
+      --navy-deep: #071422;
+      --gold: #C99700;
+      --gold-soft: #E8C547;
+      --green: #00843D;
+      --ink: #e8e2d0;
+      --muted: #9aa6b5;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      min-height: 100%;
+      background: radial-gradient(1200px 600px at 80% -10%, #16345a 0%, var(--navy-deep) 55%);
+      color: var(--ink);
+      font-family: "Segoe UI", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    }
+
+    .page {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 32px 28px 64px;
+    }
+
+    header h1 {
+      margin: 0 0 6px;
+      font-size: 28px;
+      letter-spacing: 0.04em;
+      color: var(--gold-soft);
+    }
+
+    header .sub {
+      margin: 0 0 22px;
+      color: var(--muted);
+      font-size: 15px;
+    }
+
+    .notice {
+      border: 1px solid rgba(201, 151, 0, 0.45);
+      background: rgba(12, 35, 64, 0.75);
+      color: #f3e7b8;
+      padding: 14px 16px;
+      border-radius: 8px;
+      margin-bottom: 28px;
+      line-height: 1.45;
+    }
+
+    .notice strong { color: #F6E27A; }
+
+    .grid {
+      display: grid;
+      grid-template-columns: minmax(280px, 380px) 1fr;
+      gap: 28px;
+      align-items: start;
+    }
+
+    @media (max-width: 900px) {
+      .grid { grid-template-columns: 1fr; }
+    }
+
+    label {
+      display: block;
+      font-size: 12px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin: 0 0 6px;
+    }
+
+    .field { margin-bottom: 16px; }
+
+    input, select {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 6px;
+      border: 1px solid #2a4a6e;
+      background: #0a1b30;
+      color: var(--ink);
+      font-size: 15px;
+    }
+
+    input:focus, select:focus {
+      outline: 2px solid var(--gold);
+      outline-offset: 1px;
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .url-box {
+      margin-top: 8px;
+    }
+
+    .url-row {
+      display: flex;
+      gap: 8px;
+    }
+
+    #overlay-url {
+      flex: 1;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 12px;
+      word-break: break-all;
+    }
+
+    button {
+      border: 0;
+      border-radius: 6px;
+      background: linear-gradient(180deg, #E8C547, #C99700);
+      color: var(--navy-deep);
+      font-weight: 700;
+      padding: 10px 14px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    button:hover { filter: brightness(1.06); }
+
+    button.secondary {
+      background: transparent;
+      color: var(--gold-soft);
+      border: 1px solid rgba(201, 151, 0, 0.55);
+      margin-top: 10px;
+    }
+
+    .copied { color: #8dffb0; font-size: 13px; margin-left: 8px; min-height: 1em; }
+
+    .preview-wrap h2 {
+      margin: 0 0 10px;
+      font-size: 13px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--gold);
+    }
+
+    .preview-frame {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      overflow: hidden;
+      border: 1px solid #3a5a2a;
+      border-color: rgba(201, 151, 0, 0.4);
+      border-radius: 8px;
+      background-color: #1a1a1a;
+      background-image:
+        linear-gradient(45deg, #2a2a2a 25%, transparent 25%),
+        linear-gradient(-45deg, #2a2a2a 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, #2a2a2a 75%),
+        linear-gradient(-45deg, transparent 75%, #2a2a2a 75%);
+      background-size: 32px 32px;
+      background-position: 0 0, 0 16px, 16px -16px, -16px 0;
+    }
+
+    .preview-frame iframe {
+      position: absolute;
+      top: 0;
+      left: 0;
+      border: 0;
+      background: transparent;
+      transform-origin: top left;
+    }
+
+    .hint {
+      margin: 10px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header>
+      <h1>Tiki overlay controller</h1>
+      <p class="sub">Notre Dame–inspired flip typography for OBS and Moblin. Off-stream only — do not add this page as a browser source.</p>
+    </header>
+
+    <div class="notice">
+      <strong>This is a URL builder, not live remote control.</strong>
+      Changing the fields below updates the preview and the generated overlay URL on this page only. It does not push changes to a source that is already running on stream. To apply new wording, timing, position, scale, or canvas size, copy the new overlay URL and paste it into the OBS or Moblin browser source (or reload that source after you edit the URL).
+    </div>
+
+    <div class="grid">
+      <form id="form" autocomplete="off">
+        <div class="field">
+          <label for="a">Phrase A (front)</label>
+          <input id="a" type="text" value="Road To The Natty" />
+        </div>
+        <div class="field">
+          <label for="b">Phrase B (back)</label>
+          <input id="b" type="text" value="I'm Hearing You!" />
+        </div>
+        <div class="row">
+          <div class="field">
+            <label for="interval">Flip interval (seconds)</label>
+            <input id="interval" type="number" min="0.4" max="60" step="0.1" value="2.5" />
+          </div>
+          <div class="field">
+            <label for="pos">Position on canvas</label>
+            <select id="pos">
+              <option value="bottom-center" selected>Bottom center</option>
+              <option value="bottom-left">Bottom left</option>
+              <option value="bottom-right">Bottom right</option>
+              <option value="top-center">Top center</option>
+              <option value="top-left">Top left</option>
+              <option value="top-right">Top right</option>
+              <option value="center">Center</option>
+            </select>
+          </div>
+        </div>
+        <div class="row">
+          <div class="field">
+            <label for="w">Canvas width (w)</label>
+            <input id="w" type="number" min="100" max="7680" step="1" value="1920" />
+          </div>
+          <div class="field">
+            <label for="h">Canvas height (h)</label>
+            <input id="h" type="number" min="100" max="4320" step="1" value="1080" />
+          </div>
+        </div>
+        <div class="field">
+          <label for="scale">Scale</label>
+          <input id="scale" type="number" min="0.15" max="4" step="0.05" value="1" />
+        </div>
+
+        <div class="field url-box">
+          <label for="overlay-url">Overlay URL</label>
+          <div class="url-row">
+            <input id="overlay-url" type="text" readonly />
+            <button type="button" id="copy-btn">Copy URL</button>
+          </div>
+          <span class="copied" id="copied" aria-live="polite"></span>
+        </div>
+        <button type="button" class="secondary" id="reset-btn">Reset to defaults</button>
+      </form>
+
+      <div class="preview-wrap">
+        <h2>Live preview of the generated URL</h2>
+        <div class="preview-frame" id="preview-frame">
+          <iframe id="preview" title="Overlay preview" allowtransparency="true"></iframe>
+        </div>
+        <p class="hint">
+          The checkerboard is only in this preview, so you can see the transparent page behind the letters.
+          Set your OBS / Moblin browser source width and height to the same values as canvas width (w) and height (h).
+          The flip runs on a CSS animation inside the overlay page; this preview reloads when you change a field so you can check the result before copying the URL.
+        </p>
+      </div>
+    </div>
+  </div>
+  <script>
+    (function () {
+      var fields = ["a", "b", "interval", "pos", "w", "h", "scale"];
+      var defaults = {
+        a: "Road To The Natty",
+        b: "I'm Hearing You!",
+        interval: "2.5",
+        pos: "bottom-center",
+        w: "1920",
+        h: "1080",
+        scale: "1"
+      };
+
+      var urlInput = document.getElementById("overlay-url");
+      var iframe = document.getElementById("preview");
+      var frame = document.getElementById("preview-frame");
+      var copied = document.getElementById("copied");
+      var copyTimer = 0;
+
+      function buildUrl() {
+        var url = new URL("overlay.html", window.location.href);
+        fields.forEach(function (id) {
+          var el = document.getElementById(id);
+          url.searchParams.set(id, el.value);
+        });
+        return url.href;
+      }
+
+      function sizePreview() {
+        var w = parseFloat(document.getElementById("w").value) || 1920;
+        var h = parseFloat(document.getElementById("h").value) || 1080;
+        var rect = frame.getBoundingClientRect();
+        var scale = Math.min(rect.width / w, rect.height / h);
+        iframe.style.width = w + "px";
+        iframe.style.height = h + "px";
+        iframe.style.transform = "scale(" + scale + ")";
+      }
+
+      function refresh() {
+        var href = buildUrl();
+        urlInput.value = href;
+        iframe.src = href;
+        sizePreview();
+      }
+
+      fields.forEach(function (id) {
+        var el = document.getElementById(id);
+        el.addEventListener("input", refresh);
+        el.addEventListener("change", refresh);
+      });
+
+      window.addEventListener("resize", sizePreview);
+
+      document.getElementById("copy-btn").addEventListener("click", function () {
+        var text = urlInput.value;
+        function ok() {
+          copied.textContent = "Copied. Paste this into the browser source URL to apply.";
+          clearTimeout(copyTimer);
+          copyTimer = setTimeout(function () { copied.textContent = ""; }, 3500);
+        }
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(text).then(ok).catch(function () {
+            urlInput.select();
+            document.execCommand("copy");
+            ok();
+          });
+        } else {
+          urlInput.select();
+          document.execCommand("copy");
+          ok();
+        }
+      });
+
+      document.getElementById("reset-btn").addEventListener("click", function () {
+        fields.forEach(function (id) {
+          document.getElementById(id).value = defaults[id];
+        });
+        refresh();
+      });
+
+      refresh();
+    })();
+  </script>
+</body>
+</html>
