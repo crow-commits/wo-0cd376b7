@@ -725,10 +725,139 @@
       }
       .hero-plus:active, .hero-plus.is-pressed { transform: none; }
     }
+
+    body.is-locked {
+      overflow: hidden;
+    }
+    body.is-locked .app {
+      display: none !important;
+    }
+
+    #unlock-screen {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 80;
+      align-items: center;
+      justify-content: center;
+      padding: max(20px, env(safe-area-inset-top)) 20px max(24px, env(safe-area-inset-bottom));
+      background:
+        radial-gradient(900px 420px at 100% -10%, #1c4a7a 0%, transparent 55%),
+        radial-gradient(700px 360px at -10% 80%, rgba(0, 132, 61, 0.18), transparent 50%),
+        var(--navy-deep);
+    }
+    body.is-locked #unlock-screen {
+      display: flex;
+    }
+
+    #unlock-form {
+      width: 100%;
+      max-width: 400px;
+      padding: 28px 22px 24px;
+      border: 1px solid rgba(201, 151, 0, 0.5);
+      border-radius: 20px;
+      background: rgba(7, 20, 34, 0.88);
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45);
+    }
+    #unlock-form.is-shake {
+      animation: unlock-shake 0.42s ease;
+    }
+    @keyframes unlock-shake {
+      0%, 100% { transform: translateX(0); }
+      20% { transform: translateX(-10px); }
+      40% { transform: translateX(10px); }
+      60% { transform: translateX(-6px); }
+      80% { transform: translateX(6px); }
+    }
+    #unlock-form .eyebrow {
+      margin-bottom: 4px;
+    }
+    #unlock-form h1 {
+      margin: 0 0 8px;
+      font-family: "Graduate", "Alfa Slab One", Rockwell, serif;
+      font-size: clamp(22px, 7vw, 28px);
+      font-weight: 400;
+      letter-spacing: 0.03em;
+      color: var(--cream);
+      line-height: 1.15;
+    }
+    #unlock-lead, #unlock-form .offstream {
+      margin: 0 0 18px;
+      color: var(--muted);
+      font-size: 15px;
+    }
+    #unlock-form label {
+      display: block;
+      margin: 0 0 8px;
+      font-family: "Graduate", "Alfa Slab One", Rockwell, serif;
+      font-size: 12px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--gold-soft);
+    }
+    #unlock-input {
+      width: 100%;
+      min-height: 52px;
+      margin: 0 0 14px;
+      padding: 12px 14px;
+      border: 1px solid rgba(201, 151, 0, 0.55);
+      border-radius: 12px;
+      background: #071422;
+      color: var(--cream);
+      font-size: 18px;
+    }
+    #unlock-input:focus {
+      outline: 3px solid var(--gold-bright);
+      outline-offset: 2px;
+    }
+    #unlock-btn {
+      margin: 0;
+      min-height: 64px;
+      font-size: 28px;
+    }
+    .unlock-error {
+      min-height: 1.3em;
+      margin: 12px 0 0;
+      color: #f0c0c0;
+      font-size: 14px;
+      font-weight: 700;
+      text-align: center;
+    }
+
+    .lock-btn {
+      margin-top: 6px;
+      padding: 8px 14px;
+      min-height: 40px;
+      min-width: 72px;
+      border: 1px solid rgba(201, 151, 0, 0.5);
+      border-radius: 999px;
+      background: rgba(7, 20, 34, 0.7);
+      color: var(--gold-soft);
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+    .lock-btn:hover { filter: brightness(1.08); }
+
+    @media (prefers-reduced-motion: reduce) {
+      #unlock-form.is-shake { animation: none; }
+    }
   </style>
 </head>
-<body>
-  <div class="app">
+<body class="is-locked">
+  <div id="unlock-screen" role="dialog" aria-modal="true" aria-labelledby="unlock-title" aria-describedby="unlock-lead">
+    <form id="unlock-form" autocomplete="off">
+      <p class="eyebrow">Tiki · Off-stream control</p>
+      <h1 id="unlock-title">CJ Carr for Heisman</h1>
+      <p id="unlock-lead">Enter the controller password to unlock. Do not add this page as a browser source.</p>
+      <label for="unlock-input">Password</label>
+      <input id="unlock-input" type="password" name="password" autocomplete="current-password" enterkeyhint="go" spellcheck="false" autocapitalize="off" />
+      <button type="submit" class="hero-plus" id="unlock-btn">Unlock</button>
+      <p id="unlock-error" class="unlock-error" role="alert" hidden></p>
+    </form>
+  </div>
+  <div class="app" id="controller-app">
     <header class="top">
       <div>
         <p class="eyebrow">Tiki · Off-stream control</p>
@@ -738,6 +867,7 @@
       <div class="status-row">
         <span id="status-pill" class="pill is-reconnecting" role="status">Reconnecting</span>
         <span id="last-updated">Last updated —</span>
+        <button type="button" class="lock-btn" id="lock-btn">Lock</button>
       </div>
     </header>
 
@@ -798,7 +928,7 @@
           <div class="setup-body">
             <div class="notice">
               <strong>The count can update live. The look cannot.</strong>
-              +1 / −1 / Set / Reset / visibility update any open overlay live — on this computer instantly, and across phones and IRL Toolkit / OBS through the hosted channel. There is no login: anyone who opens this controller URL can change the on-stream count. Style, position, scale, and canvas size still work as a URL builder: copy the overlay URL and paste it into the browser source.
+              +1 / −1 / Set / Reset / visibility update any open overlay live — on this computer instantly, and across phones and IRL Toolkit / OBS through the hosted channel. This page is password-gated on the device; anyone who unlocks it can change the on-stream count. Style, position, scale, and canvas size still work as a URL builder: copy the overlay URL and paste it into the browser source.
             </div>
 
             <form id="form" autocomplete="off">
@@ -983,8 +1113,11 @@
       var undoBtn = document.getElementById("undo-btn");
       var lastUpdated = document.getElementById("last-updated");
       var statusPill = document.getElementById("status-pill");
+      var trophyIframe = document.getElementById("trophy-preview");
       var copyTimer = 0;
       var State = window.TikiHeismanState;
+      var counter = null;
+      var started = false;
       var pageParams = new URLSearchParams(window.location.search);
       var roomName = State ? State.safeRoom(pageParams.get("room")) : "default";
       var historyStack = [];
@@ -1162,23 +1295,117 @@
       }
 
       var seed = State ? State.clamp(pageParams.get("count") || 0) : 0;
-      var trophyIframe = document.getElementById("trophy-preview");
+      var GATE_KEY = "tiki-heisman-controller-gate";
+      // SHA-256 of the controller password; plaintext is not stored in this file.
+      var GATE_HASH = "d94cc1a1c043e28e72d5a77c32f05a1954522647df9ba09e5308a9e0ba4f69f1";
 
-      var counter = State ? State.createCounter({
-        role: "publisher",
-        initial: seed,
-        room: roomName,
-        getPeers: peerWindows,
-        onChange: function (n, meta) { renderLive(n, meta); }
-      }) : null;
-
-      if (counter && typeof counter.onStatus === "function") {
-        counter.onStatus(setConnection);
-      } else if (counter) {
-        setConnection(counter.getStatus ? counter.getStatus() : counter.transportKind);
+      function hexDigest(buffer) {
+        var bytes = new Uint8Array(buffer);
+        var out = "";
+        for (var i = 0; i < bytes.length; i++) {
+          var h = bytes[i].toString(16);
+          out += h.length === 1 ? "0" + h : h;
+        }
+        return out;
       }
-      renderLive(currentCount(), { at: Date.now(), flags: counter ? counter.getFlags() : null });
-      syncUndoBtn();
+
+      function hashText(value) {
+        if (!window.crypto || !crypto.subtle) {
+          return Promise.reject(new Error("secure-context"));
+        }
+        return crypto.subtle.digest("SHA-256", new TextEncoder().encode(value)).then(hexDigest);
+      }
+
+      function isRemembered() {
+        try { return localStorage.getItem(GATE_KEY) === GATE_HASH; } catch (err) { return false; }
+      }
+
+      function rememberUnlock() {
+        try { localStorage.setItem(GATE_KEY, GATE_HASH); } catch (err) {}
+      }
+
+      function forgetUnlock() {
+        try { localStorage.removeItem(GATE_KEY); } catch (err) {}
+      }
+
+      function clearPreviewFrames() {
+        [mini, iframe, trophyIframe].forEach(function (el) {
+          if (!el) return;
+          try { el.src = "about:blank"; } catch (err) {}
+          try { el.removeAttribute("src"); } catch (err2) {}
+        });
+      }
+
+      function setLocked(locked) {
+        document.body.classList.toggle("is-locked", locked);
+        var app = document.getElementById("controller-app");
+        if (app) {
+          if (locked) app.setAttribute("inert", "");
+          else app.removeAttribute("inert");
+        }
+        var screen = document.getElementById("unlock-screen");
+        if (screen) screen.setAttribute("aria-hidden", locked ? "false" : "true");
+      }
+
+      function showUnlockError(message) {
+        var err = document.getElementById("unlock-error");
+        var form = document.getElementById("unlock-form");
+        err.hidden = false;
+        err.textContent = message;
+        form.classList.remove("is-shake");
+        void form.offsetWidth;
+        form.classList.add("is-shake");
+        form.addEventListener("animationend", function () {
+          form.classList.remove("is-shake");
+        }, { once: true });
+      }
+
+      function boot() {
+        if (started) return;
+        started = true;
+        setLocked(false);
+        if (State) {
+          counter = State.createCounter({
+            role: "publisher",
+            initial: seed,
+            room: roomName,
+            getPeers: peerWindows,
+            onChange: function (n, meta) { renderLive(n, meta); }
+          });
+        } else {
+          counter = null;
+        }
+        if (counter && typeof counter.onStatus === "function") {
+          counter.onStatus(setConnection);
+        } else if (counter) {
+          setConnection(counter.getStatus ? counter.getStatus() : counter.transportKind);
+        }
+        renderLive(currentCount(), { at: Date.now(), flags: counter ? counter.getFlags() : null });
+        syncUndoBtn();
+        refreshPreview();
+        refreshMini();
+        refreshTrophy();
+      }
+
+      function lockDown() {
+        forgetUnlock();
+        if (counter && typeof counter.close === "function") {
+          try { counter.close(); } catch (err) {}
+        }
+        counter = null;
+        started = false;
+        historyStack = [];
+        syncUndoBtn();
+        setConnection("offline");
+        clearPreviewFrames();
+        setLocked(true);
+        var input = document.getElementById("unlock-input");
+        var err = document.getElementById("unlock-error");
+        err.hidden = true;
+        err.textContent = "";
+        input.value = "";
+        setTimeout(function () { input.focus(); }, 50);
+      }
 
       function setPressed(selector, isOn) {
         document.querySelectorAll(selector).forEach(function (btn) {
@@ -1485,9 +1712,43 @@
         sizeTrophyPreview();
       });
 
-      refreshPreview();
-      refreshMini();
-      refreshTrophy();
+      document.getElementById("lock-btn").addEventListener("click", function () {
+        lockDown();
+      });
+
+      document.getElementById("unlock-form").addEventListener("submit", function (ev) {
+        ev.preventDefault();
+        var input = document.getElementById("unlock-input");
+        var raw = String(input.value || "").trim();
+        var err = document.getElementById("unlock-error");
+        err.hidden = true;
+        if (!raw) {
+          showUnlockError("Enter the password.");
+          input.focus();
+          return;
+        }
+        hashText(raw).then(function (digest) {
+          if (digest !== GATE_HASH) {
+            showUnlockError("Wrong password");
+            input.select();
+            return;
+          }
+          rememberUnlock();
+          boot();
+        }).catch(function () {
+          showUnlockError("Unlock needs a secure connection (https).");
+        });
+      });
+
+      if (isRemembered()) {
+        boot();
+      } else {
+        setLocked(true);
+        setTimeout(function () {
+          var input = document.getElementById("unlock-input");
+          if (input) input.focus();
+        }, 50);
+      }
     })();
   </script>
 </body>

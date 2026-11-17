@@ -39,7 +39,7 @@ https://crow-commits.github.io/wo-0cd376b7/tiki-heisman/controller.html
 - The status pill should read **Live** when the hosted channel is connected. **Reconnecting** / **Offline** mean the page is retrying; the last known count stays on screen.
 - **Setup** (collapsed while you stream) still builds card and trophy URLs with position, scale, and canvas size if you need a custom layout.
 
-**Anyone with the controller URL can change the overlay.** There is no password. Share that link only with people who should be able to tap +1.
+The controller is password-protected on the device. Unlock it once and it stays unlocked in that browser until you tap **Lock**. This is a soft, client-side gate on a static site (the hosted channel topic still lives in `state.js`), so still treat the controller URL as private and share it only with people who should be able to tap +1.
 
 Same-device tabs still update instantly (BroadcastChannel). Phones, other computers, and IRL Toolkit / OBS receive the same full state through a public pub/sub channel (ntfy.sh). Rapid taps are coalesced to at most about four hosted publishes per second; the latest full state is what gets sent. If the hosted cache expires (~12 hours with no messages), an overlay falls back to its last saved count or the `count=` URL seed, and reopening the controller republishes its last known state.
 
