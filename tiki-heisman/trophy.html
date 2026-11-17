@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Tiki — Heisman Trophy Overlay</title>
+  <style>
+    :root {
+      --navy: #0C2340;
+      --navy-deep: #071422;
+      --gold: #C99700;
+      --scale: 1;
+      --stage-w: 1920px;
+      --stage-h: 1080px;
+      --trophy-h: 460px;
+      --trophy-aspect: 762 / 1009;
+      --sheen-duration: 4.5s;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      background: transparent !important;
+      overflow: hidden;
+    }
+
+    #fit {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: var(--stage-w, 1920px);
+      height: var(--stage-h, 1080px);
+      transform: translate(-50%, -50%) scale(var(--fit-scale, min(100vw / var(--stage-w, 1920px), 100vh / var(--stage-h, 1080px))));
+      transform-origin: center center;
+    }
+
+    #stage {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: transparent;
+      opacity: 1;
+      transition: opacity 0.4s ease;
+    }
+
+    body.is-hidden #stage {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .anchor {
+      position: absolute;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+    }
+
+    .anchor.bottom-center { left: 50%; bottom: 7.5%; transform: translateX(-50%) scale(var(--scale)); transform-origin: center bottom; }
+    .anchor.top-center    { left: 50%; top: 7.5%;    transform: translateX(-50%) scale(var(--scale)); transform-origin: center top; }
+    .anchor.center        { left: 50%; top: 50%;     transform: translate(-50%, -50%) scale(var(--scale)); transform-origin: center center; }
+    .anchor.bottom-left   { left: 3.2%; bottom: 7.5%; transform: scale(var(--scale)); transform-origin: left bottom; }
+    .anchor.bottom-right  { right: 3.2%; bottom: 7.5%; transform: scale(var(--scale)); transform-origin: right bottom; }
+    .anchor.top-left      { left: 3.2%; top: 7.5%; transform: scale(var(--scale)); transform-origin: left top; }
+    .anchor.top-right     { right: 3.2%; top: 7.5%; transform: scale(var(--scale)); transform-origin: right top; }
+
+    .trophy-mark {
+      position: relative;
+      display: block;
+      height: var(--trophy-h, 460px);
+      width: calc(var(--trophy-h, 460px) * 762 / 1009);
+      overflow: visible;
+      filter:
+        drop-shadow(0 0 1px rgba(12, 35, 64, 0.95))
+        drop-shadow(0 1px 1px #071422)
+        drop-shadow(0 0 8px rgba(0, 0, 0, 0.72))
+        drop-shadow(0 8px 18px rgba(0, 0, 0, 0.5));
+    }
+
+    .trophy-art {
+      position: relative;
+      width: 100%;
+      height: 100%;
+    }
+
+    .trophy {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      pointer-events: none;
+      user-select: none;
+      -webkit-user-drag: none;
+    }
+
+    .trophy-sheen-bar {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      overflow: hidden;
+      -webkit-mask-image: url("trophy.png");
+      mask-image: url("trophy.png");
+      -webkit-mask-size: 100% 100%;
+      mask-size: 100% 100%;
+      -webkit-mask-repeat: no-repeat;
+      mask-repeat: no-repeat;
+      -webkit-mask-position: center;
+      mask-position: center;
+      -webkit-mask-mode: alpha;
+      mask-mode: alpha;
+    }
+
+    .trophy-sheen-bar::after {
+      content: "";
+      position: absolute;
+      top: -20%;
+      height: 140%;
+      width: 38%;
+      left: -45%;
+      background: linear-gradient(
+        90deg,
+        transparent 0%,
+        rgba(255, 252, 230, 0) 28%,
+        rgba(255, 252, 230, 0.3) 50%,
+        rgba(255, 228, 150, 0.1) 62%,
+        transparent 82%
+      );
+      transform: skewX(-20deg) translateX(0);
+      mix-blend-mode: soft-light;
+    }
+
+    body.anim-on .trophy-mark {
+      animation: enter 0.7s ease-out both;
+    }
+
+    body.anim-off .trophy-mark {
+      animation: none;
+      opacity: 1;
+      transform: none;
+    }
+
+    @keyframes enter {
+      from { opacity: 0; transform: translateY(12px) scale(0.96); }
+      to   { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    body.anim-on .trophy-sheen-bar::after {
+      animation: trophy-sheen var(--sheen-duration, 4.5s) ease-in-out 0.5s infinite;
+    }
+
+    body.anim-off .trophy-sheen-bar::after {
+      animation: none;
+      opacity: 0;
+      transform: skewX(-20deg) translateX(-120%);
+    }
+
+    @keyframes trophy-sheen {
+      0%, 18%  { transform: skewX(-20deg) translateX(0); }
+      48%, 100% { transform: skewX(-20deg) translateX(420%); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      body.anim-on .trophy-mark,
+      body.anim-on .trophy-sheen-bar::after {
+        animation: none !important;
+      }
+      #stage { transition: none; }
+    }
+  </style>
+</head>
+<body class="anim-on">
+  <div id="fit">
+    <div id="stage">
+      <div class="anchor top-right" id="anchor">
+        <div class="trophy-mark" id="trophy-mark" role="img" aria-label="Heisman Memorial Trophy">
+          <div class="trophy-art">
+            <img class="trophy" src="trophy.png" alt="" width="762" height="1009" />
+            <span class="trophy-sheen-bar" aria-hidden="true"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="state.js"></script>
+  <script>
+    (function () {
+      var POSITIONS = {
+        "bottom-center": 1,
+        "top-center": 1,
+        "center": 1,
+        "bottom-left": 1,
+        "bottom-right": 1,
+        "top-left": 1,
+        "top-right": 1
+      };
+
+      var DEFAULTS = {
+        w: 1920,
+        h: 1080,
+        pos: "top-right",
+        scale: 1,
+        anim: true,
+        room: "default"
+      };
+
+      var State = window.TikiHeismanState;
+
+      var params = new URLSearchParams(window.location.search);
+
+      function numParam(name, fallback, min, max) {
+        if (!params.has(name)) return fallback;
+        var raw = params.get(name);
+        if (raw === null || String(raw).trim() === "") return fallback;
+        var v = parseFloat(raw);
+        if (!isFinite(v) || v < min || v > max) return fallback;
+        return v;
+      }
+
+      function animParam() {
+        if (!params.has("anim") && !params.has("animation")) return DEFAULTS.anim;
+        var raw = (params.get("anim") || params.get("animation") || "").trim().toLowerCase();
+        if (raw === "") return DEFAULTS.anim;
+        if (raw === "0" || raw === "off" || raw === "false" || raw === "no") return false;
+        if (raw === "1" || raw === "on" || raw === "true" || raw === "yes") return true;
+        return DEFAULTS.anim;
+      }
+
+      function posParam() {
+        var raw = (params.get("pos") || "").trim().toLowerCase();
+        return POSITIONS[raw] ? raw : DEFAULTS.pos;
+      }
+
+      function roomParam() {
+        return State ? State.safeRoom(params.get("room")) : DEFAULTS.room;
+      }
+
+      var cfg = {
+        w: Math.round(numParam("w", DEFAULTS.w, 100, 7680)),
+        h: Math.round(numParam("h", DEFAULTS.h, 100, 4320)),
+        pos: posParam(),
+        scale: numParam("scale", DEFAULTS.scale, 0.15, 4),
+        anim: animParam(),
+        visible: true,
+        room: roomParam()
+      };
+
+      var root = document.documentElement;
+      var body = document.body;
+
+      function applyPresentation() {
+        body.className = (cfg.anim ? "anim-on" : "anim-off") + (cfg.visible ? "" : " is-hidden");
+        var stage = document.getElementById("stage");
+        if (stage) stage.setAttribute("aria-hidden", cfg.visible ? "false" : "true");
+      }
+
+      applyPresentation();
+      root.style.setProperty("--stage-w", cfg.w + "px");
+      root.style.setProperty("--stage-h", cfg.h + "px");
+      root.style.setProperty("--scale", String(cfg.scale));
+
+      // Keep the trophy a consistent fraction of the stage height.
+      var trophyH = Math.max(160, Math.round(Math.min(cfg.w, cfg.h * 1.777) * 0.24));
+      root.style.setProperty("--trophy-h", trophyH + "px");
+
+      function fitStage() {
+        var vw = window.innerWidth;
+        var vh = window.innerHeight;
+        if (window.visualViewport) {
+          vw = window.visualViewport.width;
+          vh = window.visualViewport.height;
+        }
+        var s = Math.min(vw / cfg.w, vh / cfg.h);
+        if (!isFinite(s) || s <= 0) s = 1;
+        root.style.setProperty("--fit-scale", String(s));
+      }
+      window.addEventListener("resize", fitStage, { passive: true });
+      if (window.visualViewport) {
+        window.visualViewport.addEventListener("resize", fitStage, { passive: true });
+      }
+      fitStage();
+
+      document.getElementById("anchor").className = "anchor " + cfg.pos;
+
+      function applyFlags(flags) {
+        if (!flags) return;
+        var anim = flags.trophyAnim !== false;
+        var visible = flags.trophyVisible !== false;
+        var changed = anim !== cfg.anim || visible !== cfg.visible;
+        cfg.anim = anim;
+        cfg.visible = visible;
+        if (changed) applyPresentation();
+      }
+
+      if (State) {
+        State.createCounter({
+          role: "follower",
+          initial: 0,
+          room: cfg.room,
+          useStored: true,
+          onChange: function (n, meta) {
+            if (meta && meta.flags) applyFlags(meta.flags);
+          }
+        });
+      }
+    })();
+  </script>
+</body>
+</html>
